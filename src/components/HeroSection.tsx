@@ -12,7 +12,7 @@ const HeroSection = () => {
       <div className="hero-gradient-overlay absolute inset-0" />
       <div className="absolute bottom-6 left-5 right-5">
         <h1 className="text-3xl md:text-4xl font-extrabold uppercase tracking-wider text-primary-foreground leading-tight">
-          Forno Rio<br />Vermelho
+          Pizza<br />Pituba
         </h1>
         <div className="mt-3 inline-flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-full px-3 py-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse-dot" />

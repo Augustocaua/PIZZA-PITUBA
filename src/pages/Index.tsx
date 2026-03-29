@@ -73,9 +73,110 @@ const classicItems = [
   },
 ];
 
+const cocaImage = "/foto refri/coca cola.jpeg";
+const guaranaImage = "/foto refri/guarana.jpeg";
+const spriteImage = "/foto refri/sprite.jpeg";
+
+const softDrinks1L = [
+  {
+    id: 8,
+    image: cocaImage,
+    title: "Coca-Cola Clássica (Garrafa de Vidro - 1L)",
+    description: "A clássica e estupidamente gelada na garrafa de vidro.",
+    price: "R$ 16,00",
+    priceNum: 16,
+  },
+  {
+    id: 9,
+    image: guaranaImage,
+    title: "Guaraná Antarctica (Garrafa de Vidro - 1L)",
+    description: "O sabor original do Brasil, servido trincando.",
+    price: "R$ 14,00",
+    priceNum: 14,
+  },
+  {
+    id: 10,
+    image: spriteImage,
+    title: "Sprite (Lata 350ml)",
+    description: "Refrigerante Sprite bem gelado.",
+    price: "R$ 7,00",
+    priceNum: 7,
+  },
+];
+
+const useHorizontalDragScroll = () => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const isPointerDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const startScrollLeftRef = useRef(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "mouse") return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    isPointerDownRef.current = true;
+    setIsDragging(true);
+    startXRef.current = e.clientX;
+    startScrollLeftRef.current = el.scrollLeft;
+    el.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPointerDownRef.current) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const deltaX = e.clientX - startXRef.current;
+    el.scrollLeft = startScrollLeftRef.current - deltaX;
+  };
+
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "mouse") return;
+    const el = containerRef.current;
+
+    isPointerDownRef.current = false;
+    setIsDragging(false);
+
+    if (el) {
+      try {
+        el.releasePointerCapture(e.pointerId);
+      } catch {}
+    }
+  };
+
+  const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    if (el.scrollWidth <= el.clientWidth) return;
+
+    el.scrollLeft += e.deltaY;
+    e.preventDefault();
+  };
+
+  return {
+    containerRef,
+    isDragging,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp: endDrag,
+    onPointerCancel: endDrag,
+    onWheel,
+  };
+};
+
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("Destaques");
   const [cart, setCart] = useState<{ id: number; price: number }[]>([]);
+  const featuredSectionRef = useRef<HTMLElement | null>(null);
+  const classicSectionRef = useRef<HTMLElement | null>(null);
+  const drinksSectionRef = useRef<HTMLElement | null>(null);
+  const featuredScroller = useHorizontalDragScroll();
+  const classicScroller = useHorizontalDragScroll();
+  const drinksScroller = useHorizontalDragScroll();
 
   const addToCart = (id: number, price: number) => {
     setCart((prev) => [...prev, { id, price }]);
@@ -84,20 +185,54 @@ const Index = () => {
   const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
   const formattedTotal = `R$ ${totalPrice.toFixed(2).replace(".", ",")}`;
 
+  const scrollToSection = (section: HTMLElement | null) => {
+    if (!section) return;
+    const top = section.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: "smooth" });
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+
+    if (category === "Destaques" || category === "Especiais") {
+      scrollToSection(featuredSectionRef.current);
+      return;
+    }
+
+    if (category === "Pizzas Clássicas") {
+      scrollToSection(classicSectionRef.current);
+      return;
+    }
+
+    if (category === "Bebidas") {
+      scrollToSection(drinksSectionRef.current);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
+      <CategoryNav activeCategory={activeCategory} onCategoryChange={handleCategoryChange} />
       <HeroSection />
-      <CategoryNav activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
 
       {/* Featured Section */}
-      <section className="mt-8">
+      <section ref={featuredSectionRef} className="mt-8">
         <div className="container">
           <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-foreground mb-5">
             As mais pedidas
           </h2>
         </div>
         <div className="pl-4 md:pl-0 md:container">
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 pr-4 snap-x snap-mandatory">
+          <div
+            ref={featuredScroller.containerRef}
+            className={`flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-2 pr-4 snap-x snap-mandatory select-none ${
+              featuredScroller.isDragging ? "cursor-grabbing" : "cursor-grab"
+            }`}
+            onPointerDown={featuredScroller.onPointerDown}
+            onPointerMove={featuredScroller.onPointerMove}
+            onPointerUp={featuredScroller.onPointerUp}
+            onPointerCancel={featuredScroller.onPointerCancel}
+            onWheel={featuredScroller.onWheel}
+          >
             {featuredItems.map((item) => (
               <FeaturedCard
                 key={item.id}
@@ -113,12 +248,22 @@ const Index = () => {
       </section>
 
       {/* Classic Pizzas */}
-      <section className="mt-10">
+      <section ref={classicSectionRef} className="mt-10">
         <div className="container">
           <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-foreground mb-4">
             Pizzas Clássicas
           </h2>
-          <div>
+          <div
+            ref={classicScroller.containerRef}
+            className={`flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory select-none ${
+              classicScroller.isDragging ? "cursor-grabbing" : "cursor-grab"
+            }`}
+            onPointerDown={classicScroller.onPointerDown}
+            onPointerMove={classicScroller.onPointerMove}
+            onPointerUp={classicScroller.onPointerUp}
+            onPointerCancel={classicScroller.onPointerCancel}
+            onWheel={classicScroller.onWheel}
+          >
             {classicItems.map((item) => (
               <MenuListItem
                 key={item.id}
@@ -127,6 +272,41 @@ const Index = () => {
                 description={item.description}
                 price={item.price}
                 onAdd={() => addToCart(item.id, item.priceNum)}
+                className="clay-card flex-shrink-0 w-[320px] md:w-[360px] snap-start border-b-0 p-4 rounded-2xl"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section ref={drinksSectionRef} className="mt-10">
+        <div className="container">
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-foreground mb-4">Bebidas</h2>
+
+          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-foreground/90 mb-3">
+            Refrigerantes
+          </h3>
+
+          <div
+            ref={drinksScroller.containerRef}
+            className={`flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory select-none ${
+              drinksScroller.isDragging ? "cursor-grabbing" : "cursor-grab"
+            }`}
+            onPointerDown={drinksScroller.onPointerDown}
+            onPointerMove={drinksScroller.onPointerMove}
+            onPointerUp={drinksScroller.onPointerUp}
+            onPointerCancel={drinksScroller.onPointerCancel}
+            onWheel={drinksScroller.onWheel}
+          >
+            {softDrinks1L.map((item) => (
+              <MenuListItem
+                key={item.id}
+                image={item.image}
+                title={item.title}
+                description={item.description}
+                price={item.price}
+                onAdd={() => addToCart(item.id, item.priceNum)}
+                className="clay-card flex-shrink-0 w-[320px] md:w-[360px] snap-start border-b-0 p-4 rounded-2xl"
               />
             ))}
           </div>
