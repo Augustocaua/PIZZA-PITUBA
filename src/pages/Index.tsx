@@ -104,6 +104,10 @@ const softDrinks1L = [
   },
 ];
 
+const allItems = [...featuredItems, ...classicItems, ...softDrinks1L];
+const itemById = new Map<number, (typeof allItems)[number]>(allItems.map((item) => [item.id, item]));
+const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
 const useHorizontalDragScroll = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isPointerDownRef = useRef(false);
@@ -170,18 +174,40 @@ const useHorizontalDragScroll = () => {
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("Destaques");
-  const [cart, setCart] = useState<{ id: number; price: number }[]>([]);
+  const [cart, setCart] = useState<{ id: number }[]>([]);
   const featuredSectionRef = useRef<HTMLElement | null>(null);
   const classicSectionRef = useRef<HTMLElement | null>(null);
   const drinksSectionRef = useRef<HTMLElement | null>(null);
   const featuredScroller = useHorizontalDragScroll();
 
-  const addToCart = (id: number, price: number) => {
-    setCart((prev) => [...prev, { id, price }]);
+  const addToCart = (id: number) => {
+    if (!itemById.get(id)) return;
+    setCart((prev) => [...prev, { id }]);
   };
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
-  const formattedTotal = `R$ ${totalPrice.toFixed(2).replace(".", ",")}`;
+  const totalPrice = cart.reduce((sum, item) => sum + (itemById.get(item.id)?.priceNum ?? 0), 0);
+  const formattedTotal = money.format(totalPrice);
+
+  const orderLines = Object.values(
+    cart.reduce(
+      (acc, item) => {
+        const menuItem = itemById.get(item.id);
+        if (!menuItem) return acc;
+
+        const existing = acc[item.id] ?? { title: menuItem.title, qty: 0, unitPrice: menuItem.priceNum };
+        existing.qty += 1;
+        acc[item.id] = existing;
+        return acc;
+      },
+      {} as Record<number, { title: string; qty: number; unitPrice: number }>,
+    ),
+  );
+
+  const whatsappMessage = [
+    "Olá! Gostaria de fazer o pedido:",
+    ...orderLines.map((line) => `- ${line.title} x${line.qty} (${money.format(line.qty * line.unitPrice)})`),
+    `Total: ${money.format(totalPrice)}`,
+  ].join("\n");
 
   const scrollToSection = (section: HTMLElement | null) => {
     if (!section) return;
@@ -238,7 +264,7 @@ const Index = () => {
                 title={item.title}
                 description={item.description}
                 price={item.price}
-                onAdd={() => addToCart(item.id, item.priceNum)}
+                onAdd={() => addToCart(item.id)}
               />
             ))}
           </div>
@@ -259,7 +285,7 @@ const Index = () => {
                 title={item.title}
                 description={item.description}
                 price={item.price}
-                onAdd={() => addToCart(item.id, item.priceNum)}
+                onAdd={() => addToCart(item.id)}
                 className="clay-card border-b-0 p-4 rounded-2xl"
               />
             ))}
@@ -283,7 +309,7 @@ const Index = () => {
                 title={item.title}
                 description={item.description}
                 price={item.price}
-                onAdd={() => addToCart(item.id, item.priceNum)}
+                onAdd={() => addToCart(item.id)}
                 className="clay-card border-b-0 p-4 rounded-2xl"
               />
             ))}
@@ -291,7 +317,7 @@ const Index = () => {
         </div>
       </section>
 
-      <FloatingCart itemCount={cart.length} total={formattedTotal} />
+      <FloatingCart itemCount={cart.length} total={formattedTotal} orderLines={orderLines} whatsappMessage={whatsappMessage} />
     </div>
   );
 };
