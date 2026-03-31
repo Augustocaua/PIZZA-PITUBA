@@ -175,8 +175,6 @@ const Index = () => {
   const classicSectionRef = useRef<HTMLElement | null>(null);
   const drinksSectionRef = useRef<HTMLElement | null>(null);
   const featuredScroller = useHorizontalDragScroll();
-  const classicScroller = useHorizontalDragScroll();
-  const drinksScroller = useHorizontalDragScroll();
 
   const addToCart = (id: number, price: number) => {
     setCart((prev) => [...prev, { id, price }]);
@@ -253,17 +251,7 @@ const Index = () => {
           <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-foreground mb-4">
             Pizzas Clássicas
           </h2>
-          <div
-            ref={classicScroller.containerRef}
-            className={`flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory select-none ${
-              classicScroller.isDragging ? "cursor-grabbing" : "cursor-grab"
-            }`}
-            onPointerDown={classicScroller.onPointerDown}
-            onPointerMove={classicScroller.onPointerMove}
-            onPointerUp={classicScroller.onPointerUp}
-            onPointerCancel={classicScroller.onPointerCancel}
-            onWheel={classicScroller.onWheel}
-          >
+          <div className="flex flex-col gap-4">
             {classicItems.map((item) => (
               <MenuListItem
                 key={item.id}
@@ -272,7 +260,7 @@ const Index = () => {
                 description={item.description}
                 price={item.price}
                 onAdd={() => addToCart(item.id, item.priceNum)}
-                className="clay-card flex-shrink-0 w-[320px] md:w-[360px] snap-start border-b-0 p-4 rounded-2xl"
+                className="clay-card border-b-0 p-4 rounded-2xl"
               />
             ))}
           </div>
@@ -287,17 +275,7 @@ const Index = () => {
             Refrigerantes
           </h3>
 
-          <div
-            ref={drinksScroller.containerRef}
-            className={`flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory select-none ${
-              drinksScroller.isDragging ? "cursor-grabbing" : "cursor-grab"
-            }`}
-            onPointerDown={drinksScroller.onPointerDown}
-            onPointerMove={drinksScroller.onPointerMove}
-            onPointerUp={drinksScroller.onPointerUp}
-            onPointerCancel={drinksScroller.onPointerCancel}
-            onWheel={drinksScroller.onWheel}
-          >
+          <div className="flex flex-col gap-4">
             {softDrinks1L.map((item) => (
               <MenuListItem
                 key={item.id}
@@ -306,7 +284,7 @@ const Index = () => {
                 description={item.description}
                 price={item.price}
                 onAdd={() => addToCart(item.id, item.priceNum)}
-                className="clay-card flex-shrink-0 w-[320px] md:w-[360px] snap-start border-b-0 p-4 rounded-2xl"
+                className="clay-card border-b-0 p-4 rounded-2xl"
               />
             ))}
           </div>
