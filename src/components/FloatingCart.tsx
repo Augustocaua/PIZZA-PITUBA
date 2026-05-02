@@ -13,7 +13,7 @@ const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL
 const FloatingCart = ({ itemCount, total, orderLines, whatsappMessage }: FloatingCartProps) => {
   if (itemCount === 0) return null;
 
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
+  const whatsappUrl = `https://wa.me/5571982875822?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4">

@@ -204,7 +204,9 @@ const Index = () => {
   );
 
   const whatsappMessage = [
-    "Olá! Gostaria de fazer o pedido:",
+    "tenho interesse no modelo cardapio digital",
+    "",
+    "Pedido:",
     ...orderLines.map((line) => `- ${line.title} x${line.qty} (${money.format(line.qty * line.unitPrice)})`),
     `Total: ${money.format(totalPrice)}`,
   ].join("\n");
